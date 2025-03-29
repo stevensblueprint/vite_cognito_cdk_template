@@ -233,8 +233,8 @@ export class ViteCognitoCdkTemplateStack extends cdk.Stack {
     const envVariables = loadEnvFile();
     const updatedVariables = {
       ...envVariables,
-      USER_POOL_ID: { value: userPoolClientId },
-      USER_POOL_APP_CLIENT_ID: { value: userPoolId },
+      VITE_USER_POOL_ID: { value: userPoolId },
+      VITE_USER_POOL_CLIENT_ID: { value: userPoolClientId },
     };
     const buildOutput = new codepipeline.Artifact();
     const buildProject = new codebuild.Project(
@@ -271,7 +271,7 @@ export class ViteCognitoCdkTemplateStack extends cdk.Stack {
         environment: {
           buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
           privileged: true,
-          environmentVariables: envVariables,
+          environmentVariables: updatedVariables,
         },
       }
     );
