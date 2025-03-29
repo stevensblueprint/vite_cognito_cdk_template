@@ -35,7 +35,8 @@ export class ViteCognitoCdkTemplateStack extends cdk.Stack {
     super(scope, id, props);
 
     /*------------------------cognito---------------------------*/
-    this._createUserPool(props);
+    const { cognitoUserPool: userPool, userPoolClient } =
+      this._createUserPool(props);
 
     /*------------------------react deployment---------------------------*/
     const webBucket = this._createWebBucket(props);
@@ -45,7 +46,9 @@ export class ViteCognitoCdkTemplateStack extends cdk.Stack {
     const { sourceOutput, sourceAction } = this._createSourceAction(props);
     const { buildOutput, buildProject } = this._createBuildProject(
       distribution,
-      props
+      props,
+      userPool.userPoolId,
+      userPoolClient.userPoolClientId
     );
     const buildAction = this._createBuildAction(
       buildProject,
@@ -217,13 +220,22 @@ export class ViteCognitoCdkTemplateStack extends cdk.Stack {
       value: userPoolClient.userPoolClientId,
       description: "Cognito User Pool Client ID",
     });
+
+    return { cognitoUserPool, userPoolClient };
   }
 
   private _createBuildProject(
     distribution: cloudfront.Distribution,
-    props: ViteCognitoCdkTemplateStackProps
+    props: ViteCognitoCdkTemplateStackProps,
+    userPoolId: string,
+    userPoolClientId: string
   ) {
     const envVariables = loadEnvFile();
+    const updatedVariables = {
+      ...envVariables,
+      USER_POOL_ID: { value: userPoolClientId },
+      USER_POOL_APP_CLIENT_ID: { value: userPoolId },
+    };
     const buildOutput = new codepipeline.Artifact();
     const buildProject = new codebuild.Project(
       this,
